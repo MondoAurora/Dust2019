@@ -27,16 +27,83 @@ namespace Dust
 		}
 	}
 	
-	public abstract class DustKernel
+	public class DustInfoTray
 	{
-		public abstract double getValDoubleImpl(DustEntity entity, DustKey key, double defVal);
+		public DustEntity owner;
+		public Object key;
+		
+		public Object value;
+		
+		public Object dustHint;
+		public Object rawHint;
+		
+		public DustInfoTray()
+		{
+		}
+		
+		public DustInfoTray(DustInfoTray src)
+		{
+			this.owner = src.owner;
+			this.key = src.key;
+			this.value = src.value;
+			this.dustHint = src.dustHint;
+			this.rawHint = src.rawHint;
+		}
+		
+		public DustInfoTray(DustEntity owner, Object key, Object value)
+		{
+			this.owner = owner;
+			this.key = key;
+			this.value = value;
+		}
 	}
 	
-	public abstract class DustEntityProcessorBase
+	public enum VisitAction
 	{
-		public abstract void processEntity(DustEntity entity);
+		beginVisit,
+		enterContext,
+		separateItems,
+		leaveContext,
+		endVisit
 	}
 	
+	public class DustVisitorTray : DustInfoTray
+	{
+		public VisitAction visitAction;
+		public bool recursive;
+		
+		public DustVisitorTray(DustInfoTray src)
+			: base(src)
+		{
+		}
+		
+		public DustVisitorTray(DustVisitorTray src)
+			: base(src)
+		{
+			this.visitAction = src.visitAction;
+			this.recursive = src.recursive;
+		}
+
+	}
+
+	public enum DustOperation
+	{
+		get,
+		set,
+		visit
+	}
+	
+	public interface DustInfoProcessor
+	{
+		void processInfo(DustInfoTray tray);
+	}
+	
+	public interface DustVisitor : DustInfoProcessor
+	{
+		void processVisitEvent(DustVisitorTray tray);
+	}
+	
+
 	public enum DustValType
 	{
 		AttDefIdentifier = 0,
@@ -50,24 +117,18 @@ namespace Dust
 		LinkDefMap = -4
 	}
 
-	public abstract class Dust : DustKernel
+	public abstract class DustKernel
 	{
-		private static readonly object sysLock = new object();
+		public abstract void accessImpl(DustOperation op, DustInfoTray tray);
+	}
 
+	public abstract partial class Dust
+	{
 		protected static DustKernel dustImpl;
-		
-		protected static void init(DustKernel system)
-		{ 
-			lock (sysLock) { 
-				if (null == Dust.dustImpl) {
-					Dust.dustImpl = system;
-				}
-			}
-		}
-		
-		public static double getValDouble(DustEntity entity, DustKey key, double defVal)
+				
+		public static void access(DustOperation op, DustInfoTray tray)
 		{
-			return dustImpl.getValDoubleImpl(entity, key, defVal);
-		}		
+			dustImpl.accessImpl(op, tray);
+		}
 	}
 }

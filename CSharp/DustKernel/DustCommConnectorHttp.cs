@@ -9,6 +9,7 @@
 using System;
 using System.Net.Http;
 using System.Net.Http.Headers;
+using System.Threading.Tasks;
 
 namespace Dust.Kernel
 {
@@ -24,15 +25,21 @@ namespace Dust.Kernel
 			HttpClient.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
 		}
 	
-		public static async void loadRemote(String serverAddr, String module, String entityId, DustEntityProcessorBase proc)
+		public static async Task<DustEntity> loadRemote(String serverAddr, String module, String entityId)
 		{
 			try {
+//							var tcs = new TaskCompletionSource<DustEntity>();
+
 				string responseBody = await HttpClient.GetStringAsync("http://" + serverAddr + "/GetEntity?RemoteRefModuleName=" + module + "&RemoteRefItemModuleId=" + entityId);
-				DustEntityInstance entity = DustCommSerializerJson.loadSingleFromText(responseBody, module, entityId);
-				proc.processEntity(entity);
+				DustDataEntity entity = DustCommSerializerJson.loadSingleFromText(responseBody, module, entityId);
+//				proc.processEntity(entity);
+//				tcs.TrySetResult(entity);
+				return entity;
+				
 			} catch (HttpRequestException e) {
 				Console.WriteLine("\nException Caught!");	
 				Console.WriteLine("Message :{0} ", e.Message);
+				return null;
 			}
 		}
 	}

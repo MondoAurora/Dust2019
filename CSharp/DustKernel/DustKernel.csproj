@@ -53,7 +53,9 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="DustCommSerializerJson.cs" />
-    <Compile Include="DustData.cs" />
+    <Compile Include="DustDataEntity.cs" />
+    <Compile Include="DustDataReference.cs" />
+    <Compile Include="DustKernel.cs" />
     <Compile Include="DustCommConnectorHttp.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

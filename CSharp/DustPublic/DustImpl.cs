@@ -1,8 +1,8 @@
 ﻿/*
  * Created by SharpDevelop.
- * User: loran
- * Date: 19/05/27
- * Time: 12:23
+ * User: Montru / Lorand Kedves
+ * Date: 19/06/04
+ * Time: 09:41
  * 
  * To change this template use Tools | Options | Coding | Edit Standard Headers.
  */
@@ -13,9 +13,6 @@ using System.Linq;
 
 namespace Dust
 {
-	/// <summary>
-	/// Description of DustKey.
-	/// </summary>
 	public class DustKey
 	{
 		public readonly string module;
@@ -34,6 +31,20 @@ namespace Dust
 			                  BindingFlags.DeclaredOnly); 
 
 			return fields.Select(f => f.GetValue(null)).Cast<T>();
+		}
+	}
+
+	public abstract partial class Dust : DustKernel
+	{
+		private static readonly object sysLock = new object();
+
+		protected static void init(DustKernel system)
+		{ 
+			lock (sysLock) { 
+				if (null == Dust.dustImpl) {
+					Dust.dustImpl = system;
+				}
+			}
 		}
 	}
 }

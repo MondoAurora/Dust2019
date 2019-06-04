@@ -45,7 +45,7 @@ namespace Dust.Kernel
 			return (DustValType)Enum.Parse(typeof(DustValType), keyTypes[key]);
 		}
 		
-		DustEntityInstance resolveRef(DustSession system, DustEntityStore store, String key)
+		DustDataEntity resolveRef(DustSession system, DustEntityStore store, String key)
 		{
 			if (isLocal(key)) {
 				return store[key];
@@ -75,7 +75,7 @@ namespace Dust.Kernel
 						var pp = (JProperty)cc;
 				
 						var key = pp.Name;
-						DustEntityInstance eKey = resolveRef(system, store, key);
+						DustDataEntity eKey = resolveRef(system, store, key);
 						eKey.optValType = getValType(key);
 						Object val = null;
 						
@@ -116,7 +116,7 @@ namespace Dust.Kernel
 	
 	public static class DustCommSerializerJson
 	{
-		public static DustEntityInstance loadSingleFromText(string jsonText, string mod, string id)
+		public static DustDataEntity loadSingleFromText(string jsonText, string mod, string id)
 		{
 			DustSession session = DustSystem.getSession();
 			
@@ -131,7 +131,7 @@ namespace Dust.Kernel
 				jw.populate(js, session, k);
 			}
 
-			DustEntityInstance eRoot = session.modules[mod][id];
+			DustDataEntity eRoot = session.modules[mod][id];
 			
 			session.ctx[DustContext.SELF] = eRoot;
 			
