@@ -7,8 +7,6 @@
  * To change this template use Tools | Options | Coding | Edit Standard Headers.
  */
 using System;
-using System.Collections.Generic;
-using System.IO;
 
 namespace Dust
 {
@@ -29,7 +27,7 @@ namespace Dust
 	
 	public class DustInfoTray
 	{
-		public DustEntity owner;
+		public DustEntity entity;
 		public Object key;
 		
 		public Object value;
@@ -43,7 +41,12 @@ namespace Dust
 		
 		public DustInfoTray(DustInfoTray src)
 		{
-			this.owner = src.owner;
+			loadSrc(src);
+		}
+		
+		public void loadSrc(DustInfoTray src)
+		{
+			this.entity = src.entity;
 			this.key = src.key;
 			this.value = src.value;
 			this.dustHint = src.dustHint;
@@ -52,45 +55,86 @@ namespace Dust
 		
 		public DustInfoTray(DustEntity owner, Object key, Object value)
 		{
-			this.owner = owner;
+			this.entity = owner;
 			this.key = key;
 			this.value = value;
 		}
 	}
 	
-	public enum VisitAction
+	public enum VisitEvent
 	{
 		beginVisit,
 		enterContext,
 		separateItems,
+		revisitItem,
 		leaveContext,
-		endVisit
+		endVisit,
+		
+		visitAborted
 	}
 	
-	public class DustVisitorTray : DustInfoTray
-	{
-		public VisitAction visitAction;
-		public bool recursive;
+	public enum VisitCommand
+	{		
+		none = 0,
 		
-		public DustVisitorTray(DustInfoTray src)
+		visitAllAtts = 1,
+		visitAllRefs = 2,
+		visitAll = 3,
+		visitMeta = 256, // for serialization
+		
+		visit = visitAllAtts | visitAllRefs |	visitAll,
+		
+		recBottomUp = 4,
+		recTopDown = 8,
+		recFollowPath = 12,
+		
+		rec = recBottomUp | recTopDown |	recFollowPath,
+		
+		nextItemSkipped = 16,
+		nextLevelDone = 32,
+		nextAbort = 48,
+		
+		next = nextItemSkipped | nextLevelDone | nextAbort,
+	}
+	
+	public class DustVisitTray : DustInfoTray
+	{
+//		public VisitEvent visitEvent;
+		
+		public VisitCommand cmd;
+		public object result;
+		
+		public DustVisitTray(DustInfoTray src)
 			: base(src)
 		{
 		}
 		
-		public DustVisitorTray(DustVisitorTray src)
-			: base(src)
+		public DustVisitTray(DustVisitTray src)
 		{
-			this.visitAction = src.visitAction;
-			this.recursive = src.recursive;
+			loadSrc(src);
+		}
+		
+		public void loadSrc(DustVisitTray src)
+		{
+			base.loadSrc(src);
+			
+//			this.visitEvent = src.visitEvent;
+			this.cmd = src.cmd;
+			this.result = src.result;
 		}
 
 	}
 
-	public enum DustOperation
+	public enum DustAccessCommand
 	{
 		get,
 		set,
 		visit
+	}
+	
+	public interface DustInfoFilter
+	{
+		bool shouldProcessInfo(DustInfoTray tray);
 	}
 	
 	public interface DustInfoProcessor
@@ -100,7 +144,7 @@ namespace Dust
 	
 	public interface DustVisitor : DustInfoProcessor
 	{
-		void processVisitEvent(DustVisitorTray tray);
+		void processVisitEvent(VisitEvent visitEvent, DustVisitTray tray);
 	}
 	
 
@@ -119,14 +163,14 @@ namespace Dust
 
 	public abstract class DustKernel
 	{
-		public abstract void accessImpl(DustOperation op, DustInfoTray tray);
+		public abstract void accessImpl(DustAccessCommand op, DustInfoTray tray);
 	}
 
 	public abstract partial class Dust
 	{
 		protected static DustKernel dustImpl;
 				
-		public static void access(DustOperation op, DustInfoTray tray)
+		public static void access(DustAccessCommand op, DustInfoTray tray)
 		{
 			dustImpl.accessImpl(op, tray);
 		}

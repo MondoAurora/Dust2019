@@ -16,12 +16,24 @@ namespace Dust
 		{
 			return valType < DustValType.LinkDefSingle;
 		}
-		
-		public static double getValDouble(DustEntity entity, DustKey key, double defVal)
+				
+		public static VType getValue<VType>(DustEntity entity, VType defVal, params DustKey[] keys)
 		{
-			var tray = new DustInfoTray(entity, key, defVal);
-			Dust.access(DustOperation.get, tray);
-			return (double)tray.value;
+			var tray = new DustInfoTray(entity, null, null);
+			DustEntity e = null;
+			
+			foreach (DustKey key in keys) {
+				tray.key = key;
+				if (null != e) {
+					tray.entity = e;
+				}
+				Dust.access(DustAccessCommand.get, tray);
+				
+				e = tray.value as DustEntity;
+			}
+			
+			return (VType) ((null == tray.value) ? defVal : tray.value);
 		}
+
 	}
 }

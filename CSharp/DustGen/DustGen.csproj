@@ -48,6 +48,12 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Collection.cs" />
+    <Compile Include="Comm.cs" />
+    <Compile Include="Data.cs" />
+    <Compile Include="Generic.cs" />
+    <Compile Include="Meta.cs" />
+    <Compile Include="Proc.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>

@@ -45,7 +45,7 @@ namespace Dust.Kernel
 			return (DustValType)Enum.Parse(typeof(DustValType), keyTypes[key]);
 		}
 		
-		DustDataEntity resolveRef(DustSession system, DustEntityStore store, String key)
+		DustDataEntity resolveRef(DustSystem system, DustDataStore store, String key)
 		{
 			if (isLocal(key)) {
 				return store[key];
@@ -57,9 +57,9 @@ namespace Dust.Kernel
 			}
 		}
 		
-		public void populate(Dictionary<string, JsonUnitWrapper> js, DustSession system, String name)
+		public void populate(Dictionary<string, JsonUnitWrapper> js, DustSystem system, String name)
 		{
-			DustEntityStore store = system.modules[name];
+			DustDataStore store = system.modules[name];
 			
 			foreach (var c in data.Children()) {		
 				var p = (JProperty)c;
@@ -118,7 +118,8 @@ namespace Dust.Kernel
 	{
 		public static DustDataEntity loadSingleFromText(string jsonText, string mod, string id)
 		{
-			DustSession session = DustSystem.getSession();
+			DustSystem system = DustSystem.getSystem();
+			DustSession session = system.getCurrentSession();
 			
 			Dictionary<string, JsonUnitWrapper> js;
 			js = JsonConvert.DeserializeObject<Dictionary<string, JsonUnitWrapper>>(jsonText);
@@ -128,10 +129,10 @@ namespace Dust.Kernel
 				
 				Console.WriteLine("Unit read " + k);
 				
-				jw.populate(js, session, k);
+				jw.populate(js, system, k);
 			}
 
-			DustDataEntity eRoot = session.modules[mod][id];
+			DustDataEntity eRoot = system.getEntity(mod, id);
 			
 			session.ctx[DustContext.SELF] = eRoot;
 			
