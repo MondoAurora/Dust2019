@@ -13,12 +13,12 @@ using System.Collections.Generic;
 namespace Dust.Utils.CSharp
 {
 
-	public class DustUtilsIterator<VType> : IEnumerable<VType>, IEnumerator<VType>
+	public class DustUtilIterator<VType> : IEnumerable<VType>, IEnumerator<VType>
 	{
 		readonly VType[] items;
 		int position;
 				
-		public DustUtilsIterator(VType[] content)
+		public DustUtilIterator(VType[] content)
 		{
 			position = -1;
 			items = content;

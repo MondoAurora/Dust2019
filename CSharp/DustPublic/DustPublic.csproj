@@ -52,7 +52,7 @@
     <Compile Include="DustImpl.cs" />
     <Compile Include="DustUtilFactory.cs" />
     <Compile Include="DustUtils.cs" />
-    <Compile Include="DustUtilsIterator.cs" />
+    <Compile Include="DustUtilIterator.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>

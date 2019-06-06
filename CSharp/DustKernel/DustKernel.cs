@@ -7,7 +7,6 @@
  * To change this template use Tools | Options | Coding | Edit Standard Headers.
  */
 using System;
-using System.Collections;
 using System.Collections.Generic;
 
 using Dust;
@@ -16,111 +15,78 @@ using Dust.Utils.CSharp;
 namespace Dust.Kernel
 {
 
-	public class DustEntityStore : DustUtilFactory<String, DustDataEntity>
+	public class DustDataStore : DustUtilFactory<String, DustDataEntity>
 	{
-		public DustEntityStore()
+		public DustDataStore()
 			: base(typeof(DustDataEntity))
 		{
 		}
 	}
-	
-	public class DustRefCursor : DustUtilsIterator<DustDataReference>
+		
+	public class DustSystem : Dust
 	{
-		public readonly DustDataEntity owner;
-		public readonly DustDataEntity key;
-		
-		public static DustRefCursor optSet(DustDataEntity owner, DustDataEntity key)
-		{
-			DustDataReference ddr = owner.getRef(key);
-			return (null == ddr) ? null : new DustRefCursor(ddr);
-		}
-		
-		DustRefCursor(DustDataReference ddr)
-			: base(ddr.getMembers())
-		{
-			this.owner = ddr.eSrc;
-			this.key = ddr.eLinkDef;
-		}
-	}
-	
-	public class DustSession
-	{
-		public readonly DustSession parent;
-		
-		public readonly DustUtilFactory<String, DustEntityStore> modules = new DustUtilFactory<String, DustEntityStore>(typeof(DustEntityStore));
-		public readonly Dictionary<DustContext, DustDataEntity> ctx = new Dictionary<DustContext, DustDataEntity>();
+		public readonly DustUtilFactory<String, DustDataStore> modules = new DustUtilFactory<String, DustDataStore>(typeof(DustDataStore));
 
-		public readonly HashSet<DustDataEntity> managedInstances = new HashSet<DustDataEntity>();
-		public readonly HashSet<DustDataReference> managedReferences = new HashSet<DustDataReference>();
+		DustSession rootSession;
 		
-		public readonly List<DustRefCursor> cursors = new List<DustRefCursor>();
-
-		public DustSession()
-			: this(null)
+		public DustSystem () 
 		{
+			rootSession = new DustSession(this);
 		}
 		
-		public DustSession(DustSession p)
+		public DustSession getCurrentSession()
 		{
-			this.parent = p;
+			return rootSession;
 		}
 		
 		public DustDataEntity getEntity(String module, String entity)
 		{
 			return modules[module][entity];
 		}
-		
-	}
-	
-	public class DustSystem : Dust
-	{
-		DustSession rootSession = new DustSession();
 
-		override	public void accessImpl(DustOperation op, DustInfoTray tray)
+
+		override	public void accessImpl(DustAccessCommand op, DustInfoTray tray)
 		{
-			DustDataEntity ei = (tray.owner is DustContext) 
-				? rootSession.ctx[((DustContext)tray.owner)]
-				: (DustDataEntity)tray.owner;
+			var session = getCurrentSession();
+			
+			DustDataEntity ei = (tray.entity is DustContext) 
+				? session.ctx[((DustContext)tray.entity)]
+				: (DustDataEntity)tray.entity;
 			
 			var eKey = tray.key as DustDataEntity;
 			
-			if ( null == eKey ) {
+			if (null == eKey) {
 				var key = (DustKey)tray.key;
-				eKey = rootSession.modules[key.module][key.key];
+				eKey = modules[key.module][key.key];
 			}
 			
 			switch (op) {
-				case DustOperation.get:
-					if ( DustUtils.isEnumRef(eKey.optValType) ) {
-						foreach ( DustRefCursor drc in rootSession.cursors ) {
-							if ( (drc.owner == tray.owner) && (drc.key == tray.key)) {
+				case DustAccessCommand.get:
+					tray.value = ei.getValue(eKey, tray.value, tray.dustHint);
+					
+					if ((null == tray.value) && DustUtils.isEnumRef(eKey.optValType)) {
+						foreach (DustProcCursor drc in rootSession.cursors) {
+							if ((drc.owner == ei) && (drc.key == eKey)) {
 								tray.value = drc.Current.eTarget;
 								return;
 							}
 						}
 					}
-					tray.value = ei.getValue(eKey, tray.value, tray.dustHint);
+					
 					break;
-				case DustOperation.set:
+				case DustAccessCommand.set:
 					tray.value = ei.setValue(eKey, tray.value, tray.dustHint);
 					break;
-				case DustOperation.visit:
-					DustRefCursor cursor = DustRefCursor.optSet(ei, eKey);
-					if (null != cursor) {
-						try {
-							rootSession.cursors.Insert(0, cursor);
-							
-							var dvt = new DustVisitorTray(tray);
-							foreach (DustDataReference ddr in cursor) {
-								dvt.value = ddr.eTarget;
-								((DustInfoProcessor) tray.value).processInfo(dvt);
-							}
-						} finally {
-							rootSession.cursors.Remove(cursor);						
-						}
+				case DustAccessCommand.visit:
+					var vt = tray as DustVisitTray;
+					
+					if (null == vt) {
+						DustProcVisitProcess.visitKey(session, ei, eKey, tray);
+					} else {
+						new DustProcVisitProcess(session, vt).startVisit();
 					}
 					break;
-			}
+			}			
 		}
 
 		public static DustSystem getSystem()
@@ -130,7 +96,7 @@ namespace Dust.Kernel
 		
 		public static DustSession getSession()
 		{
-			return getSystem().rootSession;
+			return getSystem().getCurrentSession();
 		}
 		
 		public static void initKernel(string[] args)

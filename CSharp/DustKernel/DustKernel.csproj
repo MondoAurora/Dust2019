@@ -57,6 +57,9 @@
     <Compile Include="DustDataReference.cs" />
     <Compile Include="DustKernel.cs" />
     <Compile Include="DustCommConnectorHttp.cs" />
+    <Compile Include="DustProcCursor.cs" />
+    <Compile Include="DustProcSession.cs" />
+    <Compile Include="DustProcVisitProcess.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
