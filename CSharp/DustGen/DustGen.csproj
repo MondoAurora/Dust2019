@@ -60,7 +60,7 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="app.config" />
-  </ItemGroup>
+  </ItemGroup> 
   <ItemGroup>
     <ProjectReference Include="..\DustPublic\DustPublic.csproj">
       <Project>{dea2ee01-0bf4-412d-b878-06b65d9d0e98}</Project>

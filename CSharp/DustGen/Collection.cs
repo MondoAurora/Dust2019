@@ -25,8 +25,8 @@ namespace Dust.Units.Collection
 	{
 		private CollectionLinks(string module, int key) : base(module, key) { }
 
-		public static CollectionLinks SequenceMembers = new CollectionLinks("Collection", 1);
 		public static CollectionLinks MapEntryKey = new CollectionLinks("Collection", 3);
+		public static CollectionLinks SequenceMembers = new CollectionLinks("Collection", 1);
 	}
 
 }

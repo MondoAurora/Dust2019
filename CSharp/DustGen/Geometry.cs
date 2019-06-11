@@ -18,9 +18,9 @@ namespace Dust.Units.Geometry
 	{
 		private GeometryAtts(string module, int key) : base(module, key) { }
 
-		public static GeometryAtts X = new GeometryAtts("Geometry", 2);
-		public static GeometryAtts Y = new GeometryAtts("Geometry", 3);
 		public static GeometryAtts Z = new GeometryAtts("Geometry", 1);
+		public static GeometryAtts Y = new GeometryAtts("Geometry", 3);
+		public static GeometryAtts X = new GeometryAtts("Geometry", 2);
 	}
 
 	public class GeometryLinks : DustKey
