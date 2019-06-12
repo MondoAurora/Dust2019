@@ -7,6 +7,7 @@
  * To change this template use Tools | Options | Coding | Edit Standard Headers.
  */
 using System;
+using System.Reflection;
 
 namespace Dust
 {
@@ -74,13 +75,14 @@ namespace Dust
 	}
 	
 	public enum VisitCommand
-	{		
+	{
 		none = 0,
 		
 		visitAllAtts = 1,
 		visitAllRefs = 2,
 		visitAll = 3,
-		visitMeta = 256, // for serialization
+		visitMeta = 256,
+		// for serialization
 		
 		visit = visitAllAtts | visitAllRefs |	visitAll,
 		
@@ -99,7 +101,7 @@ namespace Dust
 	
 	public class DustVisitTray : DustInfoTray
 	{
-//		public VisitEvent visitEvent;
+		//		public VisitEvent visitEvent;
 		
 		public VisitCommand cmd;
 		public object result;
@@ -161,9 +163,9 @@ namespace Dust
 		LinkDefMap = -4
 	}
 
-	public abstract class DustKernel
+	public interface DustKernel
 	{
-		public abstract void accessImpl(DustAccessCommand op, DustInfoTray tray);
+		void accessImpl(DustAccessCommand op, DustInfoTray tray);
 	}
 
 	public abstract partial class Dust
@@ -174,5 +176,13 @@ namespace Dust
 		{
 			dustImpl.accessImpl(op, tray);
 		}
+		
+//		public static void propagateKernel(Assembly a)
+//		{
+//			var tDM = a.GetType("Dust.Module.DustModule");
+//			var mIK = tDM.GetMethod("initKernel");
+//			
+//			mIK.Invoke(null, new Object [] { dustImpl });
+//		}
 	}
 }

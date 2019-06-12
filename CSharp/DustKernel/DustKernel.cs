@@ -23,7 +23,7 @@ namespace Dust.Kernel
 		}
 	}
 		
-	public class DustSystem : Dust
+	public class DustSystem : Dust, DustKernel
 	{
 		public readonly DustUtilFactory<String, DustDataStore> modules = new DustUtilFactory<String, DustDataStore>(typeof(DustDataStore));
 
@@ -39,13 +39,18 @@ namespace Dust.Kernel
 			return rootSession;
 		}
 		
+		public static DustDataEntity getEntity(DustKey key)
+		{
+			return getSystem().getEntity(key.module, key.key);
+		}
+		
 		public DustDataEntity getEntity(String module, String entity)
 		{
 			return modules[module][entity];
 		}
 
 
-		override	public void accessImpl(DustAccessCommand op, DustInfoTray tray)
+		public void accessImpl(DustAccessCommand op, DustInfoTray tray)
 		{
 			var session = getCurrentSession();
 			

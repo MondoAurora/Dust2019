@@ -34,7 +34,7 @@ namespace Dust
 		}
 	}
 
-	public abstract partial class Dust : DustKernel
+	public abstract partial class Dust
 	{
 		private static readonly object sysLock = new object();
 

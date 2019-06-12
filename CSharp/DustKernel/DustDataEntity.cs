@@ -10,6 +10,8 @@ using System;
 using System.Collections.Generic;
 
 using Dust;
+using Dust.Units.Data;
+using Dust.Units.Meta;
 
 namespace Dust.Kernel
 {
@@ -63,13 +65,29 @@ namespace Dust.Kernel
 		
 		public Object getValue(DustDataEntity key, Object defVal, object hint)
 		{
-			Object ret;
+			Object ret = defVal;
+			DustDataReference er = null;
 			
 			if (content.TryGetValue(key, out ret)) {
-				var er = ret as DustDataReference;
-				return (null == er) ? ret : er.getAt(hint);
+				er = ret as DustDataReference;
+				ret = (null == er) ? ret : er.getAt(hint);
 			}
-			return defVal;
+			
+			if ((null == ret) && (DustValType.LinkDefMap == key.optValType)) {
+				Object refPT;
+				if (content.TryGetValue(DustSystem.getEntity(MetaLinks.LinkDefItemTypePrimary), out refPT)) {
+					DustDataEntity ePT = ((DustDataReference) refPT).eTarget;
+					
+					var eNew = new DustDataEntity();
+					
+					eNew.setValue(DustSystem.getEntity(DataLinks.EntityPrimaryType), ePT, null);
+					ret = eNew;
+				}
+				
+			}
+			
+//			return (null == ret) ? defVal : ret;
+			return ret ?? defVal;
 		}
 	}
 	
