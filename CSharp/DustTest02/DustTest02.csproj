@@ -1,15 +1,16 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003" DefaultTargets="Build">
   <PropertyGroup>
-    <ProjectGuid>{05EAC091-0058-4514-B888-E8736F43A23D}</ProjectGuid>
+    <ProjectGuid>{501B741E-1A27-4F6B-AE7A-911042D0AF9D}</ProjectGuid>
     <ProjectTypeGuids>{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</ProjectTypeGuids>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
     <OutputType>Exe</OutputType>
-    <RootNamespace>DustGen</RootNamespace>
-    <AssemblyName>DustGen</AssemblyName>
+    <RootNamespace>DustTest02</RootNamespace>
+    <AssemblyName>DustTest02</AssemblyName>
     <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
     <AppDesignerFolder>Properties</AppDesignerFolder>
+    <NoWin32Manifest>False</NoWin32Manifest>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Platform)' == 'AnyCPU' ">
     <PlatformTarget>x86</PlatformTarget>
@@ -21,6 +22,8 @@
     <Optimize>False</Optimize>
     <CheckForOverflowUnderflow>True</CheckForOverflowUnderflow>
     <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <StartAction>Project</StartAction>
+    <StartWorkingDirectory>..\..\wdir\</StartWorkingDirectory>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)' == 'Release' ">
     <OutputPath>bin\Release\</OutputPath>
@@ -48,15 +51,6 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Collection.cs" />
-    <Compile Include="Comm.cs" />
-    <Compile Include="Data.cs" />
-    <Compile Include="Generic.cs" />
-    <Compile Include="Geometry.cs" />
-    <Compile Include="GuiMeta.cs" />
-    <Compile Include="Layout.cs" />
-    <Compile Include="Meta.cs" />
-    <Compile Include="Proc.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
@@ -64,6 +58,14 @@
     <None Include="app.config" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\DustGen\DustGen.csproj">
+      <Project>{05eac091-0058-4514-b888-e8736f43a23d}</Project>
+      <Name>DustGen</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\DustKernel\DustKernel.csproj">
+      <Project>{5f99e1d4-66ae-4f76-8113-8efd438f1da0}</Project>
+      <Name>DustKernel</Name>
+    </ProjectReference>
     <ProjectReference Include="..\DustPublic\DustPublic.csproj">
       <Project>{dea2ee01-0bf4-412d-b878-06b65d9d0e98}</Project>
       <Name>DustPublic</Name>

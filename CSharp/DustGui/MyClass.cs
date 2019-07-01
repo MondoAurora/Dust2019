@@ -20,8 +20,7 @@ namespace Dust.Gui
 			
 			String f3 = DustUtils.getValue(DustContext.SELF, "what?", GenericAtts.IdentifiedIdLocal);
 			
-			Console.WriteLine("The plant name is {0}", f3);
-
+			Console.WriteLine("The main entity ID is {0}", f3);
 		}
 	}
 }

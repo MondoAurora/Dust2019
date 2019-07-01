@@ -1,13 +1,13 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003" DefaultTargets="Build">
   <PropertyGroup>
-    <ProjectGuid>{05EAC091-0058-4514-B888-E8736F43A23D}</ProjectGuid>
+    <ProjectGuid>{76A97C34-7714-4E34-848A-F2A86F646864}</ProjectGuid>
     <ProjectTypeGuids>{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</ProjectTypeGuids>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <OutputType>Exe</OutputType>
-    <RootNamespace>DustGen</RootNamespace>
-    <AssemblyName>DustGen</AssemblyName>
+    <OutputType>WinExe</OutputType>
+    <RootNamespace>DustTest01</RootNamespace>
+    <AssemblyName>DustTest01</AssemblyName>
     <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
     <AppDesignerFolder>Properties</AppDesignerFolder>
   </PropertyGroup>
@@ -42,32 +42,23 @@
     <Reference Include="System.Data.DataSetExtensions">
       <RequiredTargetFramework>3.5</RequiredTargetFramework>
     </Reference>
+    <Reference Include="System.Drawing" />
+    <Reference Include="System.Windows.Forms" />
     <Reference Include="System.Xml" />
     <Reference Include="System.Xml.Linq">
       <RequiredTargetFramework>3.5</RequiredTargetFramework>
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Collection.cs" />
-    <Compile Include="Comm.cs" />
-    <Compile Include="Data.cs" />
-    <Compile Include="Generic.cs" />
-    <Compile Include="Geometry.cs" />
-    <Compile Include="GuiMeta.cs" />
-    <Compile Include="Layout.cs" />
-    <Compile Include="Meta.cs" />
-    <Compile Include="Proc.cs" />
+    <Compile Include="MainForm.cs" />
+    <Compile Include="MainForm.Designer.cs">
+      <DependentUpon>MainForm.cs</DependentUpon>
+    </Compile>
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="app.config" />
-  </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\DustPublic\DustPublic.csproj">
-      <Project>{dea2ee01-0bf4-412d-b878-06b65d9d0e98}</Project>
-      <Name>DustPublic</Name>
-    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

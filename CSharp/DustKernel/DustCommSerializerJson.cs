@@ -26,6 +26,8 @@ namespace Dust.Kernel
 		public string LocalId { get; set; }
 		public string PrimaryType { get; set; }
 		public string NativeId { get; set; }
+		public string VariantType { get; set; }
+		public string VariantVal { get; set; }
 	}
 
 	public class JsonUnitWrapper
