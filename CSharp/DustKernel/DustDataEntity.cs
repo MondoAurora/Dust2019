@@ -20,7 +20,7 @@ namespace Dust.Kernel
 	{
 		public DustValType optValType;
 
-		readonly Dictionary<DustDataEntity, Object> content = new Dictionary<DustDataEntity, Object>();
+		public readonly Dictionary<DustDataEntity, Object> content = new Dictionary<DustDataEntity, Object>();
 		
 		public Object setValue(DustDataEntity key, Object val, Object hint)
 		{
@@ -83,12 +83,9 @@ namespace Dust.Kernel
 					eNew.setValue(DustSystem.getEntity(DataLinks.EntityPrimaryType), ePT, null);
 					ret = eNew;
 				}
-				
 			}
 			
-//			return (null == ret) ? defVal : ret;
 			return ret ?? defVal;
 		}
 	}
-	
 }

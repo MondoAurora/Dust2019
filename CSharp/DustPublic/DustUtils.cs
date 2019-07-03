@@ -19,7 +19,7 @@ namespace Dust
 				
 		public static VType getValue<VType>(DustEntity entity, VType defVal, params DustKey[] keys)
 		{
-			var tray = new DustInfoTray(entity, null, null);
+			var tray = new DustInfoTray(entity, null);
 			DustEntity e = null;
 			
 			foreach (DustKey key in keys) {
@@ -27,12 +27,12 @@ namespace Dust
 				if (null != e) {
 					tray.entity = e;
 				}
-				Dust.access(DustAccessCommand.get, tray);
+				Dust.access(DustAccessCommand.read, tray);
 				
 				e = tray.value as DustEntity;
 			}
 			
-			return (VType) ((null == tray.value) ? defVal : tray.value);
+			return (VType) (tray.value ?? defVal);
 		}
 
 	}

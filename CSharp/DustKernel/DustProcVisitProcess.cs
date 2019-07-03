@@ -17,49 +17,107 @@ namespace Dust.Kernel
 	{
 		public DustVisitTray tray;
 		
-		public VisitContext( DustVisitTray tray ) {
+		public VisitContext(DustVisitTray tray)
+		{
 			this.tray = tray;
 		}
 	}
 	
 	public class DustProcVisitProcess
 	{
+		static Object VISITED = new Object();
 		readonly DustSession session;
+		readonly DustInfoTray infoTray;
 		readonly DustVisitTray visitTray;
+		
+		DustVisitTray callbackTray;
+		
+		readonly DustInfoProcessor dip;
+		readonly DustInfoFilter dif;
+		readonly DustVisitor dvp;
+
 		
 		Dictionary<DustDataEntity, Object> visitedEntities = new Dictionary<DustDataEntity, Object>();
 		List<DustDataReference> callStack = new List<DustDataReference>();
 		
-		public DustProcVisitProcess(DustSession session, DustVisitTray visitTray)
+		public DustProcVisitProcess(DustSession session, DustInfoTray tray)
 		{
 			this.session = session;
-			this.visitTray = visitTray;
-		}
-		
-		public void startVisit()
-		{
+			this.infoTray = tray;
+			this.visitTray = tray as DustVisitTray;
 			
+			dip = tray.value as DustInfoProcessor;
+			dif = tray.value as DustInfoFilter;
+			dvp = tray.value as DustVisitor;
 		}
 		
-		public static void sendVisitEvent(DustVisitor visitor, VisitEvent ve, DustVisitTray dvt, DustInfoTray src)
+		private DustVisitTray getCallbackTray()
 		{
-			// init dvt
-//			dvt.visitEvent = VisitEvent.beginVisit;
-			visitor.processVisitEvent(ve, dvt);
+			if (null == callbackTray) {
+				callbackTray = new DustVisitTray(visitTray);
+				sendVisitEvent(VisitEvent.beginVisit);
+			}
+			
+			return callbackTray;
+		}
+		
+		private void optCloseVisit()
+		{
+			if (null != callbackTray) {
+				sendVisitEvent(VisitEvent.endVisit);
+				callbackTray = null;
+			}
+		}
+		
+		public void sendVisitEvent(VisitEvent ve)
+		{
+			dvp.processVisitEvent(ve, getCallbackTray());
 			// process response
 		}
 
-		public static void visitKey(DustSession session, DustDataEntity ei, DustDataEntity eKey, DustInfoTray tray)
+		
+		public void visitEntity()
+		{
+			var e = visitTray.entity as DustDataEntity;
+			
+			if (null != e) {
+				if (visitedEntities.ContainsKey(e) && !visitTray.cmd.HasFlag(VisitCommand.recNoCheck)) {
+					sendVisitEvent(VisitEvent.revisitItem);
+				} else {
+					visitedEntities[e] = VISITED;				
+			
+					foreach (var ec in e.content.Keys) {
+						var val = e.content[ec];
+				
+						if (null != val) {
+							var r = val as DustDataReference;
+					
+							if ((null == r) && visitTray.cmd.HasFlag(VisitCommand.visitAtts)) {
+								var wt = getCallbackTray();
+								wt.key = ec;
+								wt.value = val;
+								dip.processInfo(wt);
+							} else if ((null != r) && visitTray.cmd.HasFlag(VisitCommand.visitRefs)) {
+								visitKey(session, e, ec, false);
+							}
+						}
+					}
+				
+					if (visitTray.cmd.HasFlag(VisitCommand.recPathOnce)) {
+						visitedEntities.Remove(e);
+					}
+				}
+			}
+		}
+		
+		public void visitKey(DustSession session, DustDataEntity ei, DustDataEntity eKey, bool close)
 		{
 			DustProcCursor cursor = session.optSetCursor(ei, eKey);
+			
 			if (null != cursor) {
 				try {
-					var dip = tray.value as DustInfoProcessor;
-					var dif = tray.value as DustInfoFilter;
-					var dvp = tray.value as DustVisitor;
-							
-					DustVisitTray dvt = null;
-					var pt = tray;
+					bool first = true;
+					var pt = callbackTray ?? infoTray;
 					foreach (DustDataReference ddr in cursor) {
 						pt.value = ddr.eTarget;
 									
@@ -68,25 +126,29 @@ namespace Dust.Kernel
 						}
 
 						if (null != dvp) {
-							if (null == dvt) {
-								pt = dvt = new DustVisitTray(tray);
-								sendVisitEvent(dvp, VisitEvent.beginVisit, dvt, tray);
-								sendVisitEvent(dvp, VisitEvent.enterContext, dvt, tray);
+							if (first) {
+								sendVisitEvent(VisitEvent.enterContext);
+								first = false;
 							} else {
-								sendVisitEvent(dvp, VisitEvent.separateItems, dvt, tray);
+								sendVisitEvent(VisitEvent.separateItems);
 							}
 						}
+						
 						dip.processInfo(pt);
 					}
 								
-					if (null != dvt) {
-						sendVisitEvent(dvp, VisitEvent.leaveContext, dvt, tray);
-						sendVisitEvent(dvp, VisitEvent.endVisit, dvt, tray);
+					if (!first) {
+						sendVisitEvent(VisitEvent.leaveContext);
+						if (close) {
+							sendVisitEvent(VisitEvent.endVisit);
+						}
 					} 
 								
 				} finally {
 					session.cursors.Remove(cursor);						
 				}
+			} else {
+				
 			}
 		}
 	}

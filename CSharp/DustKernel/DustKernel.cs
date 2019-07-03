@@ -61,12 +61,14 @@ namespace Dust.Kernel
 			var eKey = tray.key as DustDataEntity;
 			
 			if (null == eKey) {
-				var key = (DustKey)tray.key;
-				eKey = modules[key.module][key.key];
+				var key = tray.key as DustKey;
+				if ( null != key ) {
+					eKey = modules[key.module][key.key];
+				}
 			}
 			
 			switch (op) {
-				case DustAccessCommand.get:
+				case DustAccessCommand.read:
 					tray.value = ei.getValue(eKey, tray.value, tray.dustHint);
 					
 					if ((null == tray.value) && DustUtils.isEnumRef(eKey.optValType)) {
@@ -79,16 +81,17 @@ namespace Dust.Kernel
 					}
 					
 					break;
-				case DustAccessCommand.set:
+				case DustAccessCommand.write:
 					tray.value = ei.setValue(eKey, tray.value, tray.dustHint);
 					break;
 				case DustAccessCommand.visit:
+					var vp = new DustProcVisitProcess(session, tray);
 					var vt = tray as DustVisitTray;
 					
 					if (null == vt) {
-						DustProcVisitProcess.visitKey(session, ei, eKey, tray);
+						vp.visitKey(session, ei, eKey, true);
 					} else {
-						new DustProcVisitProcess(session, vt).startVisit();
+						vp.visitEntity();
 					}
 					break;
 			}			

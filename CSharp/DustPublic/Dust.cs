@@ -7,7 +7,6 @@
  * To change this template use Tools | Options | Coding | Edit Standard Headers.
  */
 using System;
-using System.Reflection;
 
 namespace Dust
 {
@@ -30,6 +29,7 @@ namespace Dust
 	{
 		public DustEntity entity;
 		public Object key;
+		Object[] keys;
 		
 		public Object value;
 		
@@ -40,6 +40,16 @@ namespace Dust
 		{
 		}
 		
+		public DustInfoTray(DustEntity owner, Object value, params Object[] keys)
+		{
+			this.entity = owner;
+			this.keys = keys;
+			if ( 0 < keys.Length ) {
+				this.key = keys[0];
+			}
+			this.value = value;
+		}
+
 		public DustInfoTray(DustInfoTray src)
 		{
 			loadSrc(src);
@@ -52,14 +62,7 @@ namespace Dust
 			this.value = src.value;
 			this.dustHint = src.dustHint;
 			this.rawHint = src.rawHint;
-		}
-		
-		public DustInfoTray(DustEntity owner, Object key, Object value)
-		{
-			this.entity = owner;
-			this.key = key;
-			this.value = value;
-		}
+		}		
 	}
 	
 	public enum VisitEvent
@@ -71,32 +74,35 @@ namespace Dust
 		leaveContext,
 		endVisit,
 		
-		visitAborted
+		visitAborted // called when lower layers aborted aka. finally
 	}
 	
+	[Flags]
 	public enum VisitCommand
 	{
 		none = 0,
 		
-		visitAllAtts = 1,
-		visitAllRefs = 2,
-		visitAll = 3,
-		visitMeta = 256,
+		visitAtts = 2 >> 0,
+		visitRefs = 2 >> 1,
+		visitAllData = visitAtts | visitRefs,
+		visitMeta = 2 >> 2,
 		// for serialization
 		
-		visit = visitAllAtts | visitAllRefs |	visitAll,
+		visit = visitAtts | visitRefs |	visitMeta,
 		
-		recBottomUp = 4,
-		recTopDown = 8,
-		recFollowPath = 12,
+		recEntityOnce = 2 >> 3,
+		recPathOnce = 2 >> 4,
+		recNoCheck = 2 >> 5,
 		
-		rec = recBottomUp | recTopDown |	recFollowPath,
-		
-		nextItemSkipped = 16,
-		nextLevelDone = 32,
-		nextAbort = 48,
-		
-		next = nextItemSkipped | nextLevelDone | nextAbort,
+		rec = recEntityOnce | recPathOnce |	recNoCheck,
+	}
+	
+	public enum VisitResponse
+	{
+		itemProcessed,
+		itemSkipped,
+		levelDone,
+		abort,
 	}
 	
 	public class DustVisitTray : DustInfoTray
@@ -105,6 +111,7 @@ namespace Dust
 		
 		public VisitCommand cmd;
 		public object result;
+		public VisitResponse resp;
 		
 		public DustVisitTray(DustInfoTray src)
 			: base(src)
@@ -129,8 +136,8 @@ namespace Dust
 
 	public enum DustAccessCommand
 	{
-		get,
-		set,
+		read,
+		write,
 		visit
 	}
 	

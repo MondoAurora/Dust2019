@@ -17,6 +17,19 @@ using Dust.Units.Generic;
 
 namespace DustTest02
 {
+	class DrawVisitor : DustVisitor
+	{
+		public void processVisitEvent(VisitEvent visitEvent, DustVisitTray tray)
+		{
+			Console.WriteLine("DrawVisitor processVisitEvent {0}: {1} = {2}", visitEvent, tray.key, tray.value);
+		}
+		
+		public void processInfo(DustInfoTray tray)
+		{
+			Console.WriteLine("DrawVisitor processInfo {0} = {1}", tray.key, tray.value);
+		}
+	}
+
 	class Program
 	{
 		public static void Main(string[] args)
@@ -32,9 +45,10 @@ namespace DustTest02
 			t.Wait();
 			DustEntity e = t.Result;
 			
-//			var tray = new DustInfoTray(DustContext.SELF, FleetManagementLinks.PlantVehicles, 
-//			                            new VehicleVisitor());
-//			Dust.Dust.access(DustAccessCommand.visit, tray);
+			var tray = new DustInfoTray(DustContext.SELF, new DrawVisitor());
+			var vt = new DustVisitTray(tray);
+			vt.cmd = VisitCommand.visitRefs | VisitCommand.recPathOnce;
+			Dust.Dust.access(DustAccessCommand.visit, vt);
 			
 			var a = Assembly.LoadFrom("bin\\csharp\\DustGui.dll");
 			var tt = a.GetType("Dust.Gui.MyClass");
