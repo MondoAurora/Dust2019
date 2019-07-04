@@ -82,17 +82,17 @@ namespace Dust
 	{
 		none = 0,
 		
-		visitAtts = 2 >> 0,
-		visitRefs = 2 >> 1,
+		visitAtts = 2 << 0,
+		visitRefs = 2 << 1,
 		visitAllData = visitAtts | visitRefs,
-		visitMeta = 2 >> 2,
+		visitMeta = 2 << 2,
 		// for serialization
 		
 		visit = visitAtts | visitRefs |	visitMeta,
 		
-		recEntityOnce = 2 >> 3,
-		recPathOnce = 2 >> 4,
-		recNoCheck = 2 >> 5,
+		recEntityOnce = 2 << 3,
+		recPathOnce = 2 << 4,
+		recNoCheck = 2 << 5,
 		
 		rec = recEntityOnce | recPathOnce |	recNoCheck,
 	}
@@ -159,11 +159,12 @@ namespace Dust
 
 	public enum DustValType
 	{
-		AttDefIdentifier = 0,
-		AttDefBool = 1,
-		AttDefLong = 2,
-		AttDefDouble = 3,
-		AttDefRaw = 4,
+		NotSet = 0,
+		AttDefIdentifier = 1,
+		AttDefBool = 2,
+		AttDefLong = 3,
+		AttDefDouble = 4,
+		AttDefRaw = 5,
 		LinkDefSingle = -1,
 		LinkDefSet = -2,
 		LinkDefArray = -3,
@@ -173,6 +174,7 @@ namespace Dust
 	public interface DustKernel
 	{
 		void accessImpl(DustAccessCommand op, DustInfoTray tray);
+		DustEntity resolveKeyImpl(DustKey key);
 	}
 
 	public abstract partial class Dust
@@ -182,6 +184,11 @@ namespace Dust
 		public static void access(DustAccessCommand op, DustInfoTray tray)
 		{
 			dustImpl.accessImpl(op, tray);
+		}
+		
+		public static DustEntity resolveKey(DustKey key)
+		{
+			return dustImpl.resolveKeyImpl(key);
 		}
 		
 //		public static void propagateKernel(Assembly a)

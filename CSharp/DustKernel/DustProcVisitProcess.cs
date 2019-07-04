@@ -35,8 +35,9 @@ namespace Dust.Kernel
 		readonly DustInfoProcessor dip;
 		readonly DustInfoFilter dif;
 		readonly DustVisitor dvp;
-
 		
+		bool empty;
+
 		Dictionary<DustDataEntity, Object> visitedEntities = new Dictionary<DustDataEntity, Object>();
 		List<DustDataReference> callStack = new List<DustDataReference>();
 		
@@ -45,25 +46,19 @@ namespace Dust.Kernel
 			this.session = session;
 			this.infoTray = tray;
 			this.visitTray = tray as DustVisitTray;
+			callbackTray = (null == visitTray) ? new DustVisitTray(tray) : new DustVisitTray(visitTray);
+			callbackTray.entity = session.resolveEntity(tray.entity);
+			
+			empty = true;
 			
 			dip = tray.value as DustInfoProcessor;
 			dif = tray.value as DustInfoFilter;
 			dvp = tray.value as DustVisitor;
 		}
-		
-		private DustVisitTray getCallbackTray()
-		{
-			if (null == callbackTray) {
-				callbackTray = new DustVisitTray(visitTray);
-				sendVisitEvent(VisitEvent.beginVisit);
-			}
-			
-			return callbackTray;
-		}
-		
+				
 		private void optCloseVisit()
 		{
-			if (null != callbackTray) {
+			if (!empty) {
 				sendVisitEvent(VisitEvent.endVisit);
 				callbackTray = null;
 			}
@@ -71,17 +66,23 @@ namespace Dust.Kernel
 		
 		public void sendVisitEvent(VisitEvent ve)
 		{
-			dvp.processVisitEvent(ve, getCallbackTray());
+			if (empty) {
+				empty = false;
+				sendVisitEvent(VisitEvent.beginVisit);
+			}
+
+			dvp.processVisitEvent(ve, callbackTray);
 			// process response
 		}
 
-		
 		public void visitEntity()
 		{
-			var e = visitTray.entity as DustDataEntity;
+			var e = session.resolveEntity(callbackTray.entity);
 			
 			if (null != e) {
-				if (visitedEntities.ContainsKey(e) && !visitTray.cmd.HasFlag(VisitCommand.recNoCheck)) {
+				bool found = visitedEntities.ContainsKey(e);
+				bool nochk = callbackTray.cmd.HasFlag(VisitCommand.recNoCheck);
+				if (visitedEntities.ContainsKey(e) && !callbackTray.cmd.HasFlag(VisitCommand.recNoCheck)) {
 					sendVisitEvent(VisitEvent.revisitItem);
 				} else {
 					visitedEntities[e] = VISITED;				
@@ -92,49 +93,66 @@ namespace Dust.Kernel
 						if (null != val) {
 							var r = val as DustDataReference;
 					
-							if ((null == r) && visitTray.cmd.HasFlag(VisitCommand.visitAtts)) {
-								var wt = getCallbackTray();
-								wt.key = ec;
-								wt.value = val;
-								dip.processInfo(wt);
-							} else if ((null != r) && visitTray.cmd.HasFlag(VisitCommand.visitRefs)) {
-								visitKey(session, e, ec, false);
+							if ((null == r) && callbackTray.cmd.HasFlag(VisitCommand.visitAtts)) {
+								callbackTray.key = ec;
+								callbackTray.value = val;
+								dip.processInfo(callbackTray);
+							} else if ((null != r) && callbackTray.cmd.HasFlag(VisitCommand.visitRefs)) {
+								visitKey(e, ec, false);
 							}
 						}
 					}
 				
-					if (visitTray.cmd.HasFlag(VisitCommand.recPathOnce)) {
+					if (callbackTray.cmd.HasFlag(VisitCommand.recPathOnce)) {
 						visitedEntities.Remove(e);
 					}
 				}
 			}
 		}
 		
-		public void visitKey(DustSession session, DustDataEntity ei, DustDataEntity eKey, bool close)
+		public void visitKey(DustDataEntity ei, DustDataEntity eKey, bool close)
 		{
 			DustProcCursor cursor = session.optSetCursor(ei, eKey);
 			
 			if (null != cursor) {
 				try {
 					bool first = true;
-					var pt = callbackTray ?? infoTray;
 					foreach (DustDataReference ddr in cursor) {
-						pt.value = ddr.eTarget;
+						callbackTray.entity = ei;
+						callbackTray.value = ddr.eTarget;
+						callbackTray.key = eKey;
 									
-						if ((null != dif) && !dif.shouldProcessInfo(pt)) {
+						if ((null != dif) && !dif.shouldProcessInfo(callbackTray)) {
 							continue;
 						}
 
 						if (null != dvp) {
 							if (first) {
-								sendVisitEvent(VisitEvent.enterContext);
 								first = false;
+								sendVisitEvent(VisitEvent.enterContext);
 							} else {
 								sendVisitEvent(VisitEvent.separateItems);
 							}
 						}
 						
-						dip.processInfo(pt);
+						dip.processInfo(callbackTray);
+						
+						if (null != dvp) {
+							bool map = DustValType.LinkDefMap == ddr.eLinkDef.optValType;
+
+							if (map) {
+								callbackTray.key = ddr.getId();
+								sendVisitEvent(VisitEvent.enterContext);
+							}
+							
+							callbackTray.entity = ddr.eTarget;
+							visitEntity();
+							
+							if (map) {
+								callbackTray.key = ddr.getId();
+								sendVisitEvent(VisitEvent.leaveContext);
+							}
+						}
 					}
 								
 					if (!first) {
@@ -143,12 +161,9 @@ namespace Dust.Kernel
 							sendVisitEvent(VisitEvent.endVisit);
 						}
 					} 
-								
 				} finally {
 					session.cursors.Remove(cursor);						
 				}
-			} else {
-				
 			}
 		}
 	}

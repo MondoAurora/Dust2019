@@ -14,19 +14,38 @@ using Dust;
 using Dust.Kernel;
 
 using Dust.Units.Generic;
+using Dust.Units.Geometry;
 
 namespace DustTest02
 {
-	class DrawVisitor : DustVisitor
+	class DrawVisitor : DustVisitor, DustInfoFilter
 	{
+		public bool shouldProcessInfo(DustInfoTray tray)
+		{
+			return true;
+		}
+		
 		public void processVisitEvent(VisitEvent visitEvent, DustVisitTray tray)
 		{
-			Console.WriteLine("DrawVisitor processVisitEvent {0}: {1} = {2}", visitEvent, tray.key, tray.value);
+//			Console.WriteLine("DrawVisitor processVisitEvent {0}: {1} = {2}", visitEvent, tray.key, tray.value);
 		}
 		
 		public void processInfo(DustInfoTray tray)
 		{
-			Console.WriteLine("DrawVisitor processInfo {0} = {1}", tray.key, tray.value);
+			switch (DustUtils.indexOf((DustEntity)tray.key,
+				GenericAtts.IdentifiedIdLocal, 
+				GeometryValues.GeometricDimensionCartesianY, 
+				GeometryValues.GeometricDimensionCartesianZ)) {
+				case 0:
+					Console.WriteLine("Id: {0}", tray.value);
+					break;
+			}
+			
+			if (tray.value is Double) {
+				Console.WriteLine("Double value {0}", tray.value);
+
+			}
+//			Console.WriteLine("DrawVisitor processInfo {0} = {1} {2}", tray.key, tray.value, ((null == tray.value) ? "null" : tray.value.GetType().ToString()));
 		}
 	}
 
@@ -45,9 +64,15 @@ namespace DustTest02
 			t.Wait();
 			DustEntity e = t.Result;
 			
-			var tray = new DustInfoTray(DustContext.SELF, new DrawVisitor());
+			DustEntity e1 = DustSystem.getSystem().getEntity(module, "16");
+			
+//			var tray = new DustInfoTray(DustContext.SELF, new DrawVisitor());
+			var tray = new DustInfoTray(e, new DrawVisitor());
 			var vt = new DustVisitTray(tray);
-			vt.cmd = VisitCommand.visitRefs | VisitCommand.recPathOnce;
+//			vt.cmd = VisitCommand.visitAtts | VisitCommand.recEntityOnce;
+			vt.cmd = VisitCommand.visitAllData | VisitCommand.recEntityOnce;
+//			vt.cmd = VisitCommand.visitRefs | VisitCommand.recEntityOnce;
+//			Console.WriteLine("heh? {0}", vt.cmd);
 			Dust.Dust.access(DustAccessCommand.visit, vt);
 			
 			var a = Assembly.LoadFrom("bin\\csharp\\DustGui.dll");

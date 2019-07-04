@@ -42,6 +42,26 @@ namespace Dust.Kernel
 		{
 			return system.getEntity(module, entity);
 		}
+		
+		public DustDataEntity resolveEntity(Object de)
+		{
+			var ei = de as DustDataEntity;
+			if (null != ei) {
+				return ei;				
+			}
+			
+			var dc = de as DustContext;
+			if (null != dc) {
+				return ctx[dc];
+			}
+			
+			var dk = de as DustKey;
+			if (null != dk) {
+				return system.getEntity(dk.module, dk.key);
+			}
+			
+			return null;
+		}
 
 		public DustProcCursor optSetCursor(DustDataEntity ei, DustDataEntity eKey)
 		{

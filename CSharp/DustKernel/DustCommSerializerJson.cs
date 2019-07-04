@@ -104,6 +104,21 @@ namespace Dust.Kernel
 								
 								break;
 							case DustValType.LinkDefMap:
+								var m = (JObject)pp.Value;
+								
+								foreach (var mc in m.Children()) {
+									var mp = (JProperty)mc;
+				
+									var mk = mp.Name;
+									DustDataEntity eMK = resolveRef(system, store, mk);
+						
+									var mv = ((JValue)mp.Value).Value;
+									mv = resolveRef(system, store, (String)mv);
+								
+									eTarget.setValue(eKey, mv, eMK);
+
+								}
+
 								break;
 						}
 							

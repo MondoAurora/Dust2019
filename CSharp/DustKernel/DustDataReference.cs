@@ -23,11 +23,17 @@ namespace Dust.Kernel
 		private Object coll;
 		private Object id;
 		
-		public DustDataReference(DustDataEntity eLinkDef, DustDataEntity eSrc, DustDataEntity eTarget)
+		public DustDataReference(DustDataEntity eLinkDef, DustDataEntity eSrc, DustDataEntity eTarget, Object id)
 		{
 			this.eLinkDef = eLinkDef;
 			this.eSrc = eSrc;
 			this.eTarget = eTarget;
+			this.id = id;
+		}
+		
+		public Object getId()
+		{
+			return id;
 		}
 		
 		public DustDataEntity getAt(Object hint)
@@ -80,7 +86,7 @@ namespace Dust.Kernel
 						}
 					}
 					
-					refAdd = new DustDataReference(eLinkDef, eSrc, target);
+					refAdd = new DustDataReference(eLinkDef, eSrc, target, hint);
 					refAdd.coll = coll;
 					
 					hs.Add(refAdd);
@@ -93,7 +99,7 @@ namespace Dust.Kernel
 						this.id = 0;
 					}
 					
-					refAdd = new DustDataReference(eLinkDef, eSrc, target);
+					refAdd = new DustDataReference(eLinkDef, eSrc, target, hint);
 					refAdd.coll = coll;
 					
 					if (hint is int) {
@@ -117,7 +123,7 @@ namespace Dust.Kernel
 						throw new System.ArgumentException("Invalid parameter", "hint");
 					}
 					
-					refAdd = new DustDataReference(eLinkDef, eSrc, target);
+					refAdd = new DustDataReference(eLinkDef, eSrc, target, hint);
 					refAdd.id = key;
 
 					if (key != this.id) {

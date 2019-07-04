@@ -29,7 +29,7 @@ namespace Dust.Kernel
 
 		DustSession rootSession;
 		
-		public DustSystem () 
+		public DustSystem()
 		{
 			rootSession = new DustSession(this);
 		}
@@ -49,6 +49,10 @@ namespace Dust.Kernel
 			return modules[module][entity];
 		}
 
+		public DustEntity resolveKeyImpl(DustKey key)
+		{
+			return getEntity(key.module, key.key);
+		}
 
 		public void accessImpl(DustAccessCommand op, DustInfoTray tray)
 		{
@@ -62,7 +66,7 @@ namespace Dust.Kernel
 			
 			if (null == eKey) {
 				var key = tray.key as DustKey;
-				if ( null != key ) {
+				if (null != key) {
 					eKey = modules[key.module][key.key];
 				}
 			}
@@ -89,7 +93,7 @@ namespace Dust.Kernel
 					var vt = tray as DustVisitTray;
 					
 					if (null == vt) {
-						vp.visitKey(session, ei, eKey, true);
+						vp.visitKey(ei, eKey, true);
 					} else {
 						vp.visitEntity();
 					}

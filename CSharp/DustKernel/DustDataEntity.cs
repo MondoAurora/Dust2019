@@ -40,12 +40,12 @@ namespace Dust.Kernel
 					newVal = val;
 					break;
 				case DustValType.LinkDefSingle:
-					newVal = new DustDataReference(key, this, (DustDataEntity)val);
+					newVal = new DustDataReference(key, this, (DustDataEntity)val, hint);
 					break;
 				case DustValType.LinkDefSet:
 				case DustValType.LinkDefArray:
 				case DustValType.LinkDefMap:
-					newVal = (null == oldVal) ?	new DustDataReference(key, this, (DustDataEntity)val) 
+					newVal = (null == oldVal) ?	new DustDataReference(key, this, (DustDataEntity)val, hint) 
 						: ((DustDataReference)oldVal).addItem((DustDataEntity)val, hint);
 					break;
 			}

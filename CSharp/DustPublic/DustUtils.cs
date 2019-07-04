@@ -17,6 +17,20 @@ namespace Dust
 			return valType < DustValType.LinkDefSingle;
 		}
 				
+		public static int indexOf(DustEntity entity, params DustKey[] keys)
+		{
+			int idx = 0;
+			
+			foreach (DustKey key in keys) {
+				if ( entity == Dust.resolveKey(key) ) {
+					return idx;
+				}
+				++ idx;
+			}
+			
+			return -1;
+		}
+				
 		public static VType getValue<VType>(DustEntity entity, VType defVal, params DustKey[] keys)
 		{
 			var tray = new DustInfoTray(entity, null);

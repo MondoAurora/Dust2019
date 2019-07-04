@@ -10,6 +10,7 @@ using System;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Threading.Tasks;
+using System.IO;
 
 namespace Dust.Kernel
 {
@@ -31,6 +32,9 @@ namespace Dust.Kernel
 //							var tcs = new TaskCompletionSource<DustEntity>();
 
 				string responseBody = await HttpClient.GetStringAsync("http://" + serverAddr + "/GetEntity?RemoteRefModuleName=" + module + "&RemoteRefItemModuleId=" + entityId);
+				
+				File.WriteAllText(module + "." + entityId + ".json", responseBody);
+				
 				DustDataEntity entity = DustCommSerializerJson.loadSingleFromText(responseBody, module, entityId);
 //				proc.processEntity(entity);
 //				tcs.TrySetResult(entity);
