@@ -51,6 +51,7 @@
     <Compile Include="Dust.cs" />
     <Compile Include="DustImpl.cs" />
     <Compile Include="DustUtilFactory.cs" />
+    <Compile Include="DustUtilKeyFinder.cs" />
     <Compile Include="DustUtils.cs" />
     <Compile Include="DustUtilIterator.cs" />
     <Compile Include="Program.cs" />

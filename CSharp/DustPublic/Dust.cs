@@ -40,11 +40,16 @@ namespace Dust
 		{
 		}
 		
+		public DustInfoTray(DustEntity owner)
+			:this(owner, null)
+		{
+		}
+		
 		public DustInfoTray(DustEntity owner, Object value, params Object[] keys)
 		{
 			this.entity = owner;
 			this.keys = keys;
-			if ( 0 < keys.Length ) {
+			if (0 < keys.Length) {
 				this.key = keys[0];
 			}
 			this.value = value;
@@ -62,19 +67,23 @@ namespace Dust
 			this.value = src.value;
 			this.dustHint = src.dustHint;
 			this.rawHint = src.rawHint;
-		}		
+		}
 	}
 	
 	public enum VisitEvent
 	{
-		beginVisit,
-		enterContext,
-		separateItems,
-		revisitItem,
-		leaveContext,
-		endVisit,
+		visitStart,
+		processValue,
+		keyStartOpt,
+		refSep,
+		entityStartOpt,
+		entityEnd,
+		entityRevisit,
+		keyEnd,
+		visitEnd,
 		
-		visitAborted // called when lower layers aborted aka. finally
+		visitAborted = -1,
+		visitInternalError = -2
 	}
 	
 	[Flags]
@@ -99,23 +108,26 @@ namespace Dust
 	
 	public enum VisitResponse
 	{
-		itemProcessed,
-		itemSkipped,
-		levelDone,
+		success,
+		
+		skip,
+		
 		abort,
 	}
 	
 	public class DustVisitTray : DustInfoTray
 	{
-		//		public VisitEvent visitEvent;
+		public DustVisitor visitor;
 		
 		public VisitCommand cmd;
 		public object result;
 		public VisitResponse resp;
 		
-		public DustVisitTray(DustInfoTray src)
+		public DustVisitTray(DustInfoTray src, DustVisitor visitor)
 			: base(src)
 		{
+			this.visitor = visitor;
+			value = visitor;
 		}
 		
 		public DustVisitTray(DustVisitTray src)
@@ -127,7 +139,7 @@ namespace Dust
 		{
 			base.loadSrc(src);
 			
-//			this.visitEvent = src.visitEvent;
+			this.visitor = src.visitor;
 			this.cmd = src.cmd;
 			this.result = src.result;
 		}
@@ -170,6 +182,13 @@ namespace Dust
 		LinkDefArray = -3,
 		LinkDefMap = -4
 	}
+	
+	public class DustException : Exception
+{
+    public DustException() : base() { }
+    public DustException(string message) : base(message) { }
+    public DustException(string message, System.Exception inner) : base(message, inner) { }
+}
 
 	public interface DustKernel
 	{
@@ -191,12 +210,12 @@ namespace Dust
 			return dustImpl.resolveKeyImpl(key);
 		}
 		
-//		public static void propagateKernel(Assembly a)
-//		{
-//			var tDM = a.GetType("Dust.Module.DustModule");
-//			var mIK = tDM.GetMethod("initKernel");
-//			
-//			mIK.Invoke(null, new Object [] { dustImpl });
-//		}
+		//		public static void propagateKernel(Assembly a)
+		//		{
+		//			var tDM = a.GetType("Dust.Module.DustModule");
+		//			var mIK = tDM.GetMethod("initKernel");
+		//
+		//			mIK.Invoke(null, new Object [] { dustImpl });
+		//		}
 	}
 }

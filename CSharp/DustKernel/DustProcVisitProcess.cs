@@ -46,7 +46,7 @@ namespace Dust.Kernel
 			this.session = session;
 			this.infoTray = tray;
 			this.visitTray = tray as DustVisitTray;
-			callbackTray = (null == visitTray) ? new DustVisitTray(tray) : new DustVisitTray(visitTray);
+			callbackTray = (null == visitTray) ? new DustVisitTray(tray, null) : new DustVisitTray(visitTray);
 			callbackTray.entity = session.resolveEntity(tray.entity);
 			
 			empty = true;
@@ -59,20 +59,27 @@ namespace Dust.Kernel
 		private void optCloseVisit()
 		{
 			if (!empty) {
-				sendVisitEvent(VisitEvent.endVisit);
+				sendVisitEvent(VisitEvent.visitEnd);
 				callbackTray = null;
 			}
 		}
 		
-		public void sendVisitEvent(VisitEvent ve)
+		public bool sendVisitEvent(VisitEvent ve)
 		{
+			callbackTray.resp = VisitResponse.success;
+			
 			if (empty) {
 				empty = false;
-				sendVisitEvent(VisitEvent.beginVisit);
+				sendVisitEvent(VisitEvent.visitStart);
 			}
 
 			dvp.processVisitEvent(ve, callbackTray);
-			// process response
+			
+			if (VisitResponse.abort == callbackTray.resp) {
+				throw new DustException();
+			}
+			
+			return VisitResponse.success == callbackTray.resp;
 		}
 
 		public void visitEntity()
@@ -80,91 +87,122 @@ namespace Dust.Kernel
 			var e = session.resolveEntity(callbackTray.entity);
 			
 			if (null != e) {
-				bool found = visitedEntities.ContainsKey(e);
-				bool nochk = callbackTray.cmd.HasFlag(VisitCommand.recNoCheck);
-				if (visitedEntities.ContainsKey(e) && !callbackTray.cmd.HasFlag(VisitCommand.recNoCheck)) {
-					sendVisitEvent(VisitEvent.revisitItem);
-				} else {
-					visitedEntities[e] = VISITED;				
-			
-					foreach (var ec in e.content.Keys) {
-						var val = e.content[ec];
-				
-						if (null != val) {
-							var r = val as DustDataReference;
+				Exception procEx = null;
+
+				try {
+					bool found = visitedEntities.ContainsKey(e);
+					bool nochk = callbackTray.cmd.HasFlag(VisitCommand.recNoCheck);
+					if (visitedEntities.ContainsKey(e) && !callbackTray.cmd.HasFlag(VisitCommand.recNoCheck)) {
+						callbackTray.rawHint = visitedEntities[e];
+						sendVisitEvent(VisitEvent.entityRevisit);
+					} else {
+						callbackTray.entity = e;
+						callbackTray.rawHint = VISITED;
 					
-							if ((null == r) && callbackTray.cmd.HasFlag(VisitCommand.visitAtts)) {
+						if (sendVisitEvent(VisitEvent.entityStartOpt)) {
+							Object rh = callbackTray.rawHint;
+							visitedEntities[e] = rh;				
+			
+							foreach (var ec in e.content.Keys) {
 								callbackTray.key = ec;
-								callbackTray.value = val;
-								dip.processInfo(callbackTray);
-							} else if ((null != r) && callbackTray.cmd.HasFlag(VisitCommand.visitRefs)) {
-								visitKey(e, ec, false);
+								var val = e.content[ec];
+				
+								if (null != val) {
+									if (sendVisitEvent(VisitEvent.keyStartOpt)) {
+										var r = val as DustDataReference;
+					
+										if ((null == r) && callbackTray.cmd.HasFlag(VisitCommand.visitAtts)) {
+											callbackTray.value = val;
+											callbackTray.rawHint = rh;
+											dip.processInfo(callbackTray);
+										} else if ((null != r) && callbackTray.cmd.HasFlag(VisitCommand.visitRefs)) {
+											visitRef(e, ec, false);
+										}
+									
+										callbackTray.key = ec;
+										sendVisitEvent(VisitEvent.keyEnd);
+									}
+								}
 							}
+						
+							callbackTray.rawHint = rh;
+							sendVisitEvent(VisitEvent.entityEnd);
+							visitedEntities[e] = callbackTray.rawHint;					
 						}
 					}
-				
+				} catch (Exception ex) {
+					callbackTray.rawHint = procEx = ex;
+					sendVisitEvent((ex is DustException) ? VisitEvent.visitAborted : VisitEvent.visitInternalError);
+				} finally {
 					if (callbackTray.cmd.HasFlag(VisitCommand.recPathOnce)) {
 						visitedEntities.Remove(e);
 					}
 				}
+				
+				if (null != procEx) {
+					throw procEx;
+				}
 			}
 		}
 		
-		public void visitKey(DustDataEntity ei, DustDataEntity eKey, bool close)
+		public bool visitRef(DustDataEntity ei, DustDataEntity eKey, bool close)
 		{
+			bool first = true;
 			DustProcCursor cursor = session.optSetCursor(ei, eKey);
 			
 			if (null != cursor) {
+				Exception procEx = null;
 				try {
-					bool first = true;
 					foreach (DustDataReference ddr in cursor) {
 						callbackTray.entity = ei;
 						callbackTray.value = ddr.eTarget;
 						callbackTray.key = eKey;
 									
-						if ((null != dif) && !dif.shouldProcessInfo(callbackTray)) {
-							continue;
-						}
-
 						if (null != dvp) {
 							if (first) {
 								first = false;
-								sendVisitEvent(VisitEvent.enterContext);
 							} else {
-								sendVisitEvent(VisitEvent.separateItems);
+								sendVisitEvent(VisitEvent.refSep);
 							}
 						}
 						
-						dip.processInfo(callbackTray);
-						
 						if (null != dvp) {
-							bool map = DustValType.LinkDefMap == ddr.eLinkDef.optValType;
+							object mapId = (DustValType.LinkDefMap == ddr.eLinkDef.optValType) ? ddr.getId() : null;
 
-							if (map) {
-								callbackTray.key = ddr.getId();
-								sendVisitEvent(VisitEvent.enterContext);
+							if (null != mapId) {
+								callbackTray.key = mapId;
+								if (!sendVisitEvent(VisitEvent.keyStartOpt)) {
+									continue;
+								}
 							}
 							
 							callbackTray.entity = ddr.eTarget;
 							visitEntity();
 							
-							if (map) {
-								callbackTray.key = ddr.getId();
-								sendVisitEvent(VisitEvent.leaveContext);
+							if (null != mapId) {
+								callbackTray.key = mapId;
+								sendVisitEvent(VisitEvent.keyEnd);
+								callbackTray.key = eKey;
 							}
 						}
 					}
 								
-					if (!first) {
-						sendVisitEvent(VisitEvent.leaveContext);
-						if (close) {
-							sendVisitEvent(VisitEvent.endVisit);
-						}
+					if (!first && close) {
+						sendVisitEvent(VisitEvent.visitEnd);
 					} 
+				} catch (Exception ex) {
+					callbackTray.rawHint = procEx = ex;
+					sendVisitEvent((ex is DustException) ? VisitEvent.visitAborted : VisitEvent.visitInternalError);
 				} finally {
 					session.cursors.Remove(cursor);						
 				}
+				
+				if (null != procEx) {
+					throw procEx;
+				}
 			}
+			
+			return !first;
 		}
 	}
 }

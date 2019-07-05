@@ -18,6 +18,8 @@ namespace Dust
 		public readonly string module;
 		public readonly string key;
 		
+		private String name;
+		
 		protected DustKey(string module, int key)
 		{
 			this.module = module;
@@ -31,6 +33,20 @@ namespace Dust
 			                  BindingFlags.DeclaredOnly); 
 
 			return fields.Select(f => f.GetValue(null)).Cast<T>();
+		}
+		
+		override public String ToString()
+		{
+			if ( null == name ) {
+				Type t = GetType();
+				foreach ( FieldInfo fi in t.GetFields() ) {
+					if ( fi.GetValue(null) == this ) {
+						name = t.Name + "." + fi.Name;
+						break;
+					}
+				}
+			}
+			return name;
 		}
 	}
 

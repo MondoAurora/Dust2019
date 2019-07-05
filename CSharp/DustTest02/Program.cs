@@ -13,6 +13,8 @@ using System.Threading.Tasks;
 using Dust;
 using Dust.Kernel;
 
+using Dust.Units.Data;
+using Dust.Units.Collection;
 using Dust.Units.Generic;
 using Dust.Units.Geometry;
 
@@ -20,6 +22,25 @@ namespace DustTest02
 {
 	class DrawVisitor : DustVisitor, DustInfoFilter
 	{
+		DustUtilKeyFinder kf = new DustUtilKeyFinder(
+			CollectionLinks.SequenceMembers,
+			GenericAtts.IdentifiedIdLocal,
+			DataAtts.VariantValue,
+			
+			GeometryValues.GeometricDimensionCartesianX,
+			GeometryValues.GeometricDimensionCartesianY,
+			GeometryValues.GeometricDimensionCartesianZ,
+			GeometryValues.GeometricDataRoleLocate,
+			GeometryValues.GeometricDataRoleRotate,
+			GeometryValues.GeometricDataRoleScale,
+			
+			GeometryLinks.GeometricDataType,
+			GeometryLinks.GeometricDataMeasurements,
+			
+			GeometryLinks.GeometricInclusionTarget,
+			GeometryLinks.GeometricInclusionParameters
+		);
+		
 		public bool shouldProcessInfo(DustInfoTray tray)
 		{
 			return true;
@@ -27,25 +48,50 @@ namespace DustTest02
 		
 		public void processVisitEvent(VisitEvent visitEvent, DustVisitTray tray)
 		{
+			int kfi = kf.indexOf((DustEntity)tray.key);
+			
+			switch ( visitEvent ) {
+				case VisitEvent.keyStartOpt:
+					if ( -1 == kfi ) {
+						tray.resp = VisitResponse.skip;
+					} else {
+						Console.WriteLine("Entering {0} ", kf.keyOf(kfi));
+					}
+					break;
+				case VisitEvent.keyEnd:
+					Console.WriteLine("Leaving {0} ", kf.keyOf(kfi));
+					break;
+/*
+		visitStart,
+		processValue,
+		keyStartOpt,
+		refSep,
+		entityStartOpt,
+		entityEnd,
+		entityRevisit,
+		keyEnd,
+		visitEnd,
+*/
+			}
 //			Console.WriteLine("DrawVisitor processVisitEvent {0}: {1} = {2}", visitEvent, tray.key, tray.value);
 		}
 		
 		public void processInfo(DustInfoTray tray)
 		{
-			switch (DustUtils.indexOf((DustEntity)tray.key,
-				GenericAtts.IdentifiedIdLocal, 
-				GeometryValues.GeometricDimensionCartesianY, 
-				GeometryValues.GeometricDimensionCartesianZ)) {
-				case 0:
-					Console.WriteLine("Id: {0}", tray.value);
-					break;
-			}
+//			switch (DustUtils.indexOf((DustEntity)tray.key,
+//				GenericAtts.IdentifiedIdLocal, 
+//				GeometryValues.GeometricDimensionCartesianY, 
+//				GeometryValues.GeometricDimensionCartesianZ)) {
+//				case 0:
+//					Console.WriteLine("Id: {0}", tray.value);
+//					break;
+//			}
+//			
+//			if (tray.value is Double) {
+//				Console.WriteLine("Double value {0}", tray.value);
+//			}
 			
-			if (tray.value is Double) {
-				Console.WriteLine("Double value {0}", tray.value);
-
-			}
-//			Console.WriteLine("DrawVisitor processInfo {0} = {1} {2}", tray.key, tray.value, ((null == tray.value) ? "null" : tray.value.GetType().ToString()));
+			Console.WriteLine("DrawVisitor processInfo {0} = {1}", tray.key, tray.value);
 		}
 	}
 
@@ -67,10 +113,10 @@ namespace DustTest02
 			DustEntity e1 = DustSystem.getSystem().getEntity(module, "16");
 			
 //			var tray = new DustInfoTray(DustContext.SELF, new DrawVisitor());
-			var tray = new DustInfoTray(e, new DrawVisitor());
-			var vt = new DustVisitTray(tray);
+			var tray = new DustInfoTray(e);
+			var vt = new DustVisitTray(tray, new DrawVisitor());
 //			vt.cmd = VisitCommand.visitAtts | VisitCommand.recEntityOnce;
-			vt.cmd = VisitCommand.visitAllData | VisitCommand.recEntityOnce;
+			vt.cmd = VisitCommand.visitAllData | VisitCommand.recPathOnce;
 //			vt.cmd = VisitCommand.visitRefs | VisitCommand.recEntityOnce;
 //			Console.WriteLine("heh? {0}", vt.cmd);
 			Dust.Dust.access(DustAccessCommand.visit, vt);
