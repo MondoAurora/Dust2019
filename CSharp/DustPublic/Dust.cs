@@ -34,7 +34,7 @@ namespace Dust
 		public Object value;
 		
 		public Object dustHint;
-		public Object rawHint;
+		public Object readerObject;
 		
 		public DustInfoTray()
 		{
@@ -66,7 +66,7 @@ namespace Dust
 			this.key = src.key;
 			this.value = src.value;
 			this.dustHint = src.dustHint;
-			this.rawHint = src.rawHint;
+			this.readerObject = src.readerObject;
 		}
 	}
 	
@@ -119,9 +119,18 @@ namespace Dust
 	{
 		public DustVisitor visitor;
 		
+		public object readerParent;
+		
 		public VisitCommand cmd;
 		public object result;
 		public VisitResponse resp;
+		
+		public DustVisitTray(DustEntity eRoot, DustVisitor visitor)
+			: base(eRoot)
+		{
+			this.visitor = visitor;
+			value = visitor;
+		}
 		
 		public DustVisitTray(DustInfoTray src, DustVisitor visitor)
 			: base(src)
@@ -153,10 +162,10 @@ namespace Dust
 		visit
 	}
 	
-	public interface DustInfoFilter
-	{
-		bool shouldProcessInfo(DustInfoTray tray);
-	}
+//	public interface DustInfoFilter
+//	{
+//		bool shouldProcessInfo(DustInfoTray tray);
+//	}
 	
 	public interface DustInfoProcessor
 	{

@@ -33,7 +33,7 @@ namespace Dust.Kernel
 		DustVisitTray callbackTray;
 		
 		readonly DustInfoProcessor dip;
-		readonly DustInfoFilter dif;
+		//		readonly DustInfoFilter dif;
 		readonly DustVisitor dvp;
 		
 		bool empty;
@@ -52,7 +52,7 @@ namespace Dust.Kernel
 			empty = true;
 			
 			dip = tray.value as DustInfoProcessor;
-			dif = tray.value as DustInfoFilter;
+//			dif = tray.value as DustInfoFilter;
 			dvp = tray.value as DustVisitor;
 		}
 				
@@ -82,7 +82,7 @@ namespace Dust.Kernel
 			return VisitResponse.success == callbackTray.resp;
 		}
 
-		public void visitEntity()
+		public void visitEntity(object readerParent)
 		{
 			var e = session.resolveEntity(callbackTray.entity);
 			
@@ -93,45 +93,50 @@ namespace Dust.Kernel
 					bool found = visitedEntities.ContainsKey(e);
 					bool nochk = callbackTray.cmd.HasFlag(VisitCommand.recNoCheck);
 					if (visitedEntities.ContainsKey(e) && !callbackTray.cmd.HasFlag(VisitCommand.recNoCheck)) {
-						callbackTray.rawHint = visitedEntities[e];
+						callbackTray.readerObject = visitedEntities[e];
 						sendVisitEvent(VisitEvent.entityRevisit);
 					} else {
 						callbackTray.entity = e;
-						callbackTray.rawHint = VISITED;
+						callbackTray.readerParent = readerParent;
+						callbackTray.readerObject = VISITED;
 					
 						if (sendVisitEvent(VisitEvent.entityStartOpt)) {
-							Object rh = callbackTray.rawHint;
-							visitedEntities[e] = rh;				
+							Object rh = callbackTray.readerObject;
+							visitedEntities[e] = rh ?? VISITED;				
 			
 							foreach (var ec in e.content.Keys) {
 								callbackTray.key = ec;
 								var val = e.content[ec];
 				
 								if (null != val) {
+									callbackTray.readerObject = rh;
 									if (sendVisitEvent(VisitEvent.keyStartOpt)) {
 										var r = val as DustDataReference;
 					
 										if ((null == r) && callbackTray.cmd.HasFlag(VisitCommand.visitAtts)) {
 											callbackTray.value = val;
-											callbackTray.rawHint = rh;
+											callbackTray.readerObject = rh;
 											dip.processInfo(callbackTray);
-										} else if ((null != r) && callbackTray.cmd.HasFlag(VisitCommand.visitRefs)) {
-											visitRef(e, ec, false);
-										}
 									
-										callbackTray.key = ec;
-										sendVisitEvent(VisitEvent.keyEnd);
+											callbackTray.key = ec;
+											callbackTray.readerObject = rh;
+											callbackTray.readerParent = readerParent;
+											sendVisitEvent(VisitEvent.keyEnd);
+										} else if ((null != r) && callbackTray.cmd.HasFlag(VisitCommand.visitRefs)) {
+											visitRef(e, ec, rh, false);
+										}
 									}
 								}
 							}
 						
-							callbackTray.rawHint = rh;
+							callbackTray.readerObject = rh;
+							callbackTray.readerParent = readerParent;
 							sendVisitEvent(VisitEvent.entityEnd);
-							visitedEntities[e] = callbackTray.rawHint;					
+							visitedEntities[e] = callbackTray.readerObject ?? VISITED;					
 						}
 					}
 				} catch (Exception ex) {
-					callbackTray.rawHint = procEx = ex;
+					callbackTray.readerObject = procEx = ex;
 					sendVisitEvent((ex is DustException) ? VisitEvent.visitAborted : VisitEvent.visitInternalError);
 				} finally {
 					if (callbackTray.cmd.HasFlag(VisitCommand.recPathOnce)) {
@@ -145,7 +150,7 @@ namespace Dust.Kernel
 			}
 		}
 		
-		public bool visitRef(DustDataEntity ei, DustDataEntity eKey, bool close)
+		public bool visitRef(DustDataEntity ei, DustDataEntity eKey, object readerParent, bool close)
 		{
 			bool first = true;
 			DustProcCursor cursor = session.optSetCursor(ei, eKey);
@@ -171,19 +176,29 @@ namespace Dust.Kernel
 
 							if (null != mapId) {
 								callbackTray.key = mapId;
+								callbackTray.readerParent = readerParent;
+								callbackTray.entity = ddr.eTarget;
+
 								if (!sendVisitEvent(VisitEvent.keyStartOpt)) {
+									callbackTray.entity = ei;
 									continue;
 								}
 							}
 							
 							callbackTray.entity = ddr.eTarget;
-							visitEntity();
+							visitEntity(readerParent);
 							
 							if (null != mapId) {
 								callbackTray.key = mapId;
+								callbackTray.readerParent = readerParent;
+								callbackTray.entity = ddr.eTarget;
 								sendVisitEvent(VisitEvent.keyEnd);
-								callbackTray.key = eKey;
 							}
+																
+							callbackTray.key = eKey;
+							callbackTray.entity = ddr.eTarget;
+							callbackTray.readerParent = readerParent;
+							sendVisitEvent(VisitEvent.keyEnd);
 						}
 					}
 								
@@ -191,7 +206,7 @@ namespace Dust.Kernel
 						sendVisitEvent(VisitEvent.visitEnd);
 					} 
 				} catch (Exception ex) {
-					callbackTray.rawHint = procEx = ex;
+					callbackTray.readerObject = procEx = ex;
 					sendVisitEvent((ex is DustException) ? VisitEvent.visitAborted : VisitEvent.visitInternalError);
 				} finally {
 					session.cursors.Remove(cursor);						

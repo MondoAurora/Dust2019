@@ -93,9 +93,9 @@ namespace Dust.Kernel
 					var vt = tray as DustVisitTray;
 					
 					if (null == vt) {
-						vp.visitRef(ei, eKey, true);
+						vp.visitRef(ei, eKey, null, true);
 					} else {
-						vp.visitEntity();
+						vp.visitEntity(null);
 					}
 					break;
 			}			

@@ -87,5 +87,10 @@ namespace Dust.Kernel
 			
 			return ret ?? defVal;
 		}
+		
+		override
+		public String ToString() {
+			return "Entity " + GetHashCode();
+		}
 	}
 }
