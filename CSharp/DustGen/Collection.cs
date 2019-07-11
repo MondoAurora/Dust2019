@@ -11,8 +11,8 @@ namespace Dust.Units.Collection
 	{
 		private CollectionTypes(string module, int key) : base(module, key) { }
 
-		public static CollectionTypes MapEntry = new CollectionTypes("Collection", 2);
 		public static CollectionTypes Sequence = new CollectionTypes("Collection", 0);
+		public static CollectionTypes MapEntry = new CollectionTypes("Collection", 2);
 	}
 
 	public class CollectionAtts : DustKey
