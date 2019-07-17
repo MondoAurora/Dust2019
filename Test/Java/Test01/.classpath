@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<classpath>
+	<classpathentry kind="src" path="src"/>
+	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
+	<classpathentry combineaccessrules="false" kind="src" path="/Dust"/>
+	<classpathentry combineaccessrules="false" kind="src" path="/DustGenSources"/>
+	<classpathentry kind="con" path="org.eclipse.jdt.USER_LIBRARY/Java3d">
+		<attributes>
+			<attribute name="org.eclipse.jdt.launching.CLASSPATH_ATTR_LIBRARY_PATH_ENTRY" value="Test01/lib/java3d"/>
+		</attributes>
+	</classpathentry>
+	<classpathentry combineaccessrules="false" kind="src" path="/DustJson"/>
+	<classpathentry combineaccessrules="false" kind="src" path="/DustKernel"/>
+	<classpathentry kind="output" path="bin"/>
+</classpath>

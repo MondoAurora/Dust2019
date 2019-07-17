@@ -1,0 +1,1 @@
+java -jar dust.jar RuntimeClass=montru.java.dust.kernel.DustSystem RuntimeModule=kernel ModuleRoot=bin/java
